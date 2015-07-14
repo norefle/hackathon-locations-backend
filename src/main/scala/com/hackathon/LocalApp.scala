@@ -7,7 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import scala.concurrent.duration._
 
-object LockalApp extends App {
+object LocalApp extends App {
     implicit val system = ActorSystem("lockal-server")
 
     val service = system.actorOf(Props[LocalServiceActor], "api-service")

@@ -4,6 +4,8 @@ version       := "0.0.1"
 
 scalaVersion  := "2.11.6"
 
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+
 resolvers ++= Seq(
     "Spray repo" at "http://repo.spray.io/",
     "Typesafe Releases" at "http://repo.typesafe.com/typesafe/releases/",

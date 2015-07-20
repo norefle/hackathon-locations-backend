@@ -8,5 +8,6 @@ case class Issue(
     name: String,
     longitude: Double,
     latitude: Double,
-    altitude: Double
+    altitude: Double,
+    creator: String
 )

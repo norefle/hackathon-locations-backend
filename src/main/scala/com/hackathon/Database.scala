@@ -12,14 +12,13 @@ object BSONSerializer {
     implicit object WatchFormatter extends BSONDocumentReader[Watch] with BSONDocumentWriter[Watch] {
         def read(bson: BSONDocument): Watch =
             Watch(
-                bson.getAs[BSONObjectID]("_id").get.stringify,
+                "",//bson.getAs[BSONObjectID]("_id").get.stringify,
                 bson.getAs[String]("user").get,
                 bson.getAs[String]("description").get
             )
 
         def write(watch: Watch): BSONDocument =
             BSONDocument(
-                "_id" -> BSONObjectID.generate.stringify,
                 "user" -> watch.user,
                 "description" -> watch.description
             )
@@ -33,7 +32,8 @@ object BSONSerializer {
                 bson.getAs[String]("name").get,
                 bson.getAs[Double]("longitude").get,
                 bson.getAs[Double]("latitude").get,
-                bson.getAs[Double]("altitude").get
+                bson.getAs[Double]("altitude").get,
+                bson.getAs[String]("creator").get
             )
 
         def write(item: Issue): BSONDocument =
@@ -43,7 +43,8 @@ object BSONSerializer {
                 "name" -> item.name,
                 "longitude" -> item.longitude,
                 "latitude" -> item.latitude,
-                "altitude" -> item.altitude
+                "altitude" -> item.altitude,
+                "creator" -> item.creator
             )
     }
 
@@ -67,24 +68,27 @@ object Database {
     import BSONSerializer.{IssueFormatter, WatchFormatter, IssueTypeFormatter}
 
     val ADDRESS = "localhost"
-    val PORT = 27017
     val DATABASE = "hackathon"
-    val LOCATIONS = "issue"
+    val ISSUES = "issue"
+    val ISSUETYPES = "issuetype"
+    val WATCHES = "watch"
 
     val driver = new MongoDriver
     val connection = driver.connection(List(ADDRESS))
     val db = connection(DATABASE)
-    val locations = db(LOCATIONS)
+    val issues = db(ISSUES)
+    val issueTypes = db(ISSUETYPES)
+    val watches = db(WATCHES)
 
-    def add(item: Issue): Future[Issue] = locations.insert(item).map { case _ => item }
+    def add(item: Issue): Future[Issue] = issues.insert(item).map { case _ => item }
 
-    def add(item: Watch): Future[Watch] = locations.insert(item).map { case _ => item }
+    def add(item: Watch): Future[Watch] = watches.insert(item).map { case _ => item }
 
-    def add(item: IssueType): Future[IssueType] = locations.insert(item).map { case _ => item }
+    def add(item: IssueType): Future[IssueType] = issueTypes.insert(item).map { case _ => item }
 
     def getIssues: Future[List[Issue]] =
-        locations.find(BSONDocument.empty).cursor[Issue].collect[List]()
+        issues.find(BSONDocument.empty).cursor[Issue].collect[List]()
 
     def getWatches: Future[List[Watch]] =
-        locations.find(BSONDocument.empty).cursor[Watch].collect[List]()
+        watches.find(BSONDocument.empty).cursor[Watch].collect[List]()
 }

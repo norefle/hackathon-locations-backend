@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object LocalJsonProtocol extends DefaultJsonProtocol {
     implicit val issueTypeFormat = jsonFormat2(IssueType)
-    implicit val issueFormat = jsonFormat6(Issue)
+    implicit val issueFormat = jsonFormat7(Issue)
     implicit val watchFormat = jsonFormat3(Watch)
 }
 
@@ -40,7 +40,7 @@ trait LocalService extends HttpService {
                         println("POST /hazard/issue/" ++ watchId.toString ++ ": " ++ request)
                         val jsonItem = JsonParser(request).convertTo[Issue]
                         respondWithMediaType(`application/json`) {
-                            onSuccess(Database.add(jsonItem)) {
+                            onSuccess(Database.add(jsonItem.copy(creator = watchId.toString))) {
                                 item => complete(item)
                             }
                         }
@@ -53,7 +53,7 @@ trait LocalService extends HttpService {
                 println("GET /hazard/watch/" ++ watchId.toString)
                 respondWithMediaType(`application/json`) {
                     onSuccess(Database.getWatches) {
-                        issues => complete(issues)
+                        watches => complete(watches)
                     }
                 }
             } ~
@@ -63,7 +63,7 @@ trait LocalService extends HttpService {
                         println("POST /hazard/watch/" ++ watchId.toString ++ ": " ++ request)
                         val jsonItem = JsonParser(request).convertTo[Watch]
                         respondWithMediaType(`application/json`) {
-                            onSuccess(Database.add(jsonItem)) {
+                            onSuccess(Database.add(jsonItem.copy(user = watchId.toString))) {
                                 item => complete(item)
                             }
                         }

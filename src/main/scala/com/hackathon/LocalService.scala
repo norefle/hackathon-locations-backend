@@ -9,7 +9,9 @@ import spray.routing.HttpService
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object LocalJsonProtocol extends DefaultJsonProtocol {
-    implicit val colorFormat = jsonFormat3(GeoPoint)
+    implicit val issueTypeFormat = jsonFormat2(IssueType)
+    implicit val issueFormat = jsonFormat6(Issue)
+    implicit val watchFormat = jsonFormat3(Watch)
 }
 
 class LocalServiceActor extends Actor with LocalService {
@@ -19,31 +21,54 @@ class LocalServiceActor extends Actor with LocalService {
 }
 
 trait LocalService extends HttpService {
+
     import LocalJsonProtocol._
 
     val route =
-        path("all") {
+        path("hazard" / "issue" / RestPath) { watchId =>
             get {
+                println("GET /hazard/issue/" ++ watchId.toString)
                 respondWithMediaType(`application/json`) {
-                    onSuccess(Database.getLocations) {
-                        locations => complete(locations)
+                    onSuccess(Database.getIssues) {
+                        issues => complete(issues)
                     }
                 }
-            }
-        } ~
-        path("location") {
-                post {
-                    decompressRequest() {
-                        entity(as[String]) { request =>
-                            println("Request: " ++ request)
-                            val jsonItem = JsonParser(request).convertTo[GeoPoint]
-                            respondWithMediaType(`application/json`) {
-                                onSuccess(Database.add(jsonItem)) {
-                                    item => complete(item)
-                                }
+            } ~
+            post {
+                decompressRequest() {
+                    entity(as[String]) { request =>
+                        println("POST /hazard/issue/" ++ watchId.toString ++ ": " ++ request)
+                        val jsonItem = JsonParser(request).convertTo[Issue]
+                        respondWithMediaType(`application/json`) {
+                            onSuccess(Database.add(jsonItem)) {
+                                item => complete(item)
                             }
                         }
                     }
                 }
             }
+        } ~
+        path("hazard" / "watch" / RestPath) { watchId =>
+            get {
+                println("GET /hazard/watch/" ++ watchId.toString)
+                respondWithMediaType(`application/json`) {
+                    onSuccess(Database.getWatches) {
+                        issues => complete(issues)
+                    }
+                }
+            } ~
+            post {
+                decompressRequest() {
+                    entity(as[String]) { request =>
+                        println("POST /hazard/watch/" ++ watchId.toString ++ ": " ++ request)
+                        val jsonItem = JsonParser(request).convertTo[Watch]
+                        respondWithMediaType(`application/json`) {
+                            onSuccess(Database.add(jsonItem)) {
+                                item => complete(item)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 }

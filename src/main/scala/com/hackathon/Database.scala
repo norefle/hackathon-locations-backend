@@ -109,6 +109,15 @@ object Database {
             getDistance(latitude, longitude, issue.latitude, issue.longitude)
         )
 
+    private def issueToTimestamped(issue: Issue): TimestampedIssue = TimestampedIssue(
+        issue.timestamp,
+        issue.id,
+        issue.severity,
+        issue.issueType,
+        issue.latitude,
+        issue.longitude
+    )
+
     def add(item: Issue): Future[Issue] = issues.insert(item).map { case _ => item }
 
     def add(item: Watch): Future[Watch] = watches.insert(item).map { case _ => item }
@@ -134,7 +143,11 @@ object Database {
         ).cursor[Issue].collect[List]().map(_.map(issueToDistanced(latitude, longitude)).filter(closeEnough(radius)))
     }
 
-    def removeIssue(id: String) =
-        issues.remove(BSONDocument("_id" -> BSONObjectID(id)))
+    def removeIssue(id: String) = issues.remove(BSONDocument("_id" -> BSONObjectID(id)))
+
+    def getIssuesSince(since: Long): Future[List[TimestampedIssue]] =
+        issues.find(
+            BSONDocument("timestamp" -> BSONDocument("$gt" -> since))
+        ).cursor[Issue].collect[List]().map(_.map(issueToTimestamped))
 
 }

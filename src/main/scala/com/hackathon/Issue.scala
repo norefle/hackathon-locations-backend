@@ -36,6 +36,9 @@ case class Issue(
 
 case class DistancedIssue(count: Int, id: String, `type`: Long, severity: Long, latitude: Double, longitude: Double, distance: Double)
 
+case class TimestampedIssue(timestamp: Long, id: String, severity: Long, `type`: Long, latitude: Double, longitude: Double)
+case class IssuesSince(count: Long, issues: List[TimestampedIssue])
+
 object Issue {
     def apply(latitude: Double, longitude: Double, severity: Long, creator: String): Issue = Issue(
         "",

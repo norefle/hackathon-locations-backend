@@ -9,4 +9,6 @@ object LocalJsonProtocol extends DefaultJsonProtocol {
     implicit val issueCombinatorFormat = jsonFormat4(IssueCombinator)
     implicit val radarFormat = jsonFormat2(Radar.apply)
     implicit val distancedIssueFormat = jsonFormat7(DistancedIssue)
+    implicit val timestampedIssueFormat = jsonFormat6(TimestampedIssue)
+    implicit val issuesSinceFormat = jsonFormat2(IssuesSince)
 }

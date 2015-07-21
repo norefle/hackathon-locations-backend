@@ -90,7 +90,7 @@ trait LocalService extends HttpService {
             }
         } ~
         path("hazard" / "issue" / "confirm" / RestPath) { watchId =>
-            println("GET /hazard/issue/next/" ++ watchId.toString)
+            println("GET /hazard/issue/confirm/" ++ watchId.toString)
             get {
                 parameters("cmd".as[String], "id".as[String], "confirm".as[Int]) {
                     (cmd, id, confirm) => {
@@ -105,6 +105,25 @@ trait LocalService extends HttpService {
                                         _ => complete( """{ "code": 0, "description": "Success" }""")
                                     }
                                 } else complete( """{ "code": 0, "description": "Success" }""")
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
+        } ~
+        path("hazard" / "issue" / "new" / RestPath) { watchId =>
+            //GET /hazard/issue/new/${watchid}?cmd=get?since=xxxxxxx
+            println("GET /hazard/issue/new/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "since".as[Long]) {
+                    (cmd, since) => {
+                        println("?" ++ cmd ++ " " ++ since.toString)
+                        if ("get" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.getIssuesSince(since)) {
+                                        issues => complete(IssuesSince(issues.length, issues))
+                                    }
                             }
                         }
                         else reject

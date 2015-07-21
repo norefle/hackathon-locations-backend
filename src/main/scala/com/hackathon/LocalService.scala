@@ -121,7 +121,7 @@ trait LocalService extends HttpService {
                         if ("get" == cmd) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.getIssuesSince(since)) {
-                                        issues => complete(IssuesSince(issues.length, issues))
+                                        issues => complete(IssuesSince(issues.length, issues.sortBy(_.timestamp)))
                                     }
                             }
                         }

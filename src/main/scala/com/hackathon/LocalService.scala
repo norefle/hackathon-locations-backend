@@ -27,6 +27,7 @@ trait LocalService extends HttpService {
     val route =
         path("hazard" / "issue" / RestPath) { watchId =>
             get {
+
                 println("GET /hazard/issue/" ++ watchId.toString)
                 respondWithMediaType(`application/json`) {
                     onSuccess(Database.getIssues) {
@@ -66,6 +67,24 @@ trait LocalService extends HttpService {
                             onSuccess(Database.add(jsonItem.copy(user = watchId.toString))) {
                                 item => complete(item)
                             }
+                        }
+                    }
+                }
+            }
+        } ~
+        path("hazard" / "around" / RestPath) { watchId =>
+            get {
+                parameters("lat".as[Double], "lon".as[Double], "alt".as[Double], "radius".as[Int]) { (lat, lon, alt, radius) =>
+                    println("GET /hazard/around/"
+                        ++ watchId.toString ++ " "
+                        ++ lat.toString ++ " "
+                        ++ lon.toString ++ " "
+                        ++ alt.toString ++ " "
+                        ++ radius.toString
+                    )
+                    respondWithMediaType(`application/json`) {
+                        onSuccess(Database.getAround(lat, lon, alt, radius)) {
+                            issues => complete(issues)
                         }
                     }
                 }

@@ -80,6 +80,21 @@ object Database {
     val issueTypes = db(ISSUETYPES)
     val watches = db(WATCHES)
 
+    private def closeEnough(latitude: Double, longitude: Double, radius: Double)(issue: Issue): Boolean = {
+        val earthRadius = 6378.137 // km
+        val dlat = (latitude - issue.latitude) * Math.PI / 180.0
+        val dlon = (longitude - issue.longitude) * Math.PI / 180.0
+        val a = Math.sin(dlat / 2) * Math.sin( dlat / 2) +
+            Math.cos(latitude * Math.PI / 180) * Math.cos(issue.latitude * Math.PI / 180) *
+                Math.sin(dlon / 2) * Math.sin(dlon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+        val distance = earthRadius * c * 1000
+
+        println(s"Distance is ${distance}m")
+        distance <= radius
+    }
+
     def add(item: Issue): Future[Issue] = issues.insert(item).map { case _ => item }
 
     def add(item: Watch): Future[Watch] = watches.insert(item).map { case _ => item }
@@ -91,4 +106,18 @@ object Database {
 
     def getWatches: Future[List[Watch]] =
         watches.find(BSONDocument.empty).cursor[Watch].collect[List]()
+
+    def getAround(latitude: Double, longitude: Double, altitude: Double, radius: Int): Future[List[Issue]] = {
+        println("Get around here", latitude, longitude, altitude, radius)
+        issues.find(BSONDocument("$and" ->
+            BSONArray(
+                BSONDocument("latitude" -> BSONDocument("$gt" -> (latitude - 0.01))),
+                BSONDocument("latitude" -> BSONDocument("$lt" -> (latitude + 0.01))),
+                BSONDocument("longitude" -> BSONDocument("$gt" -> (longitude - 0.01))),
+                BSONDocument("longitude" -> BSONDocument("$lt" -> (longitude + 0.01)))
+            )
+        )
+        ).cursor[Issue].collect[List]().map(_.filter(closeEnough(latitude, longitude, radius)))
+    }
+
 }

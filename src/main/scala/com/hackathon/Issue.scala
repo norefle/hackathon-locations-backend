@@ -15,6 +15,14 @@ object IssueType {
     def apply: IssueType = apply(0)
 }
 
+object Severity {
+    def apply(severity: Long): String = severity match {
+        case 1 => "orange"
+        case 2 => "red"
+        case _ => "unknown"
+    }
+}
+
 case class Issue(
     timestamp: Long,
     issueType: Long,

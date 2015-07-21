@@ -107,8 +107,8 @@ object Database {
     def getWatches: Future[List[Watch]] =
         watches.find(BSONDocument.empty).cursor[Watch].collect[List]()
 
-    def getAround(latitude: Double, longitude: Double, altitude: Double, radius: Int): Future[List[Issue]] = {
-        println("Get around here", latitude, longitude, altitude, radius)
+    def getAround(latitude: Double, longitude: Double, radius: Double): Future[List[Issue]] = {
+        println("Get around here", latitude, longitude, radius)
         issues.find(BSONDocument("$and" ->
             BSONArray(
                 BSONDocument("latitude" -> BSONDocument("$gt" -> (latitude - 0.01))),

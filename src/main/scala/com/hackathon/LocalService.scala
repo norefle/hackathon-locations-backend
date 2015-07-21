@@ -8,12 +8,6 @@ import spray.routing.HttpService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object LocalJsonProtocol extends DefaultJsonProtocol {
-    implicit val issueTypeFormat = jsonFormat2(IssueType.apply)
-    implicit val issueFormat = jsonFormat7(Issue.apply)
-    implicit val watchFormat = jsonFormat3(Watch)
-}
-
 class LocalServiceActor extends Actor with LocalService {
     def actorRefFactory = context
 
@@ -30,7 +24,7 @@ trait LocalService extends HttpService {
             get {
                 parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "severity".as[Int], "heading".as[Double], "speed".as[Double]) {
                     (cmd, lat, lon, severity, heading, speed) => {
-                        println("GET /hazard/issue/report" ++ cmd ++ " " ++
+                        println("?" ++ cmd ++ " " ++
                             lat.toString ++ " " ++
                             lon.toString ++ " " ++
                             severity.toString ++ " " ++
@@ -47,7 +41,35 @@ trait LocalService extends HttpService {
                     }
                 }
             }
-        } /*~
+        } ~
+        path("hazard" / "issue" / "count" / RestPath) { watchId =>
+            println("GET /hazard/issue/count/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double], "radius".as[Double]) {
+                    (cmd, lat, lon, heading, radius) => {
+                        println("?" ++ cmd ++ " " ++
+                            lat.toString ++ " " ++
+                            lon.toString ++ " " ++
+                            heading.toString ++ " " ++
+                            radius.toString
+                        )
+                        if ("get" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.getAround(lat, lon, radius)) {
+                                    issues => complete(Radar(issues))
+                                }
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
+        }
+
+
+
+
+        /*~
         path("hazard" / "issue" / RestPath) { watchId =>
             get {
 

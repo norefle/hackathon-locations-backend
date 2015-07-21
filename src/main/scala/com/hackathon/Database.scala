@@ -150,4 +150,10 @@ object Database {
             BSONDocument("timestamp" -> BSONDocument("$gt" -> since))
         ).cursor[Issue].collect[List]().map(_.map(issueToTimestamped))
 
+    def updateIssue(id: String, severity: Long, issueType: Long) =
+        issues.update(
+            BSONDocument("_id" -> BSONObjectID(id)),
+            BSONDocument("$set" -> BSONDocument("severity" -> severity, "type" -> issueType))
+        )
+
 }

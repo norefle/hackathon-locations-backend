@@ -113,7 +113,6 @@ trait LocalService extends HttpService {
             }
         } ~
         path("hazard" / "issue" / "new" / RestPath) { watchId =>
-            //GET /hazard/issue/new/${watchid}?cmd=get?since=xxxxxxx
             println("GET /hazard/issue/new/" ++ watchId.toString)
             get {
                 parameters("cmd".as[String], "since".as[Long]) {
@@ -130,76 +129,27 @@ trait LocalService extends HttpService {
                     }
                 }
             }
+        } ~
+        path("hazard" / "issue" / "update" / RestPath) { watchId =>
+            println("GET /hazard/issue/update/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "id".as[String], "severity".as[Int], "type".as[Int]) {
+                    (cmd, id, severity, `type`) => {
+                        println("?" ++ cmd ++ " " ++
+                            id ++ " " ++
+                            severity.toString ++ " " ++
+                            `type`.toString
+                        )
+                        if ("post" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.updateIssue(id, severity, `type`)) {
+                                    _ => complete( """{ "code": 0, "description": "Success" }""")
+                                }
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
         }
-
-
-
-
-
-        /*~
-        path("hazard" / "issue" / RestPath) { watchId =>
-            get {
-
-                println("GET /hazard/issue/" ++ watchId.toString)
-                respondWithMediaType(`application/json`) {
-                    onSuccess(Database.getIssues) {
-                        issues => complete(issues)
-                    }
-                }
-            } ~
-            post {
-                decompressRequest() {
-                    entity(as[String]) { request =>
-                        println("POST /hazard/issue/" ++ watchId.toString ++ ": " ++ request)
-                        val jsonItem = JsonParser(request).convertTo[Issue]
-                        respondWithMediaType(`application/json`) {
-                            onSuccess(Database.add(jsonItem.copy(creator = watchId.toString))) {
-                                item => complete(item)
-                            }
-                        }
-                    }
-                }
-            }
-        } ~
-        path("hazard" / "watch" / RestPath) { watchId =>
-            get {
-                println("GET /hazard/watch/" ++ watchId.toString)
-                respondWithMediaType(`application/json`) {
-                    onSuccess(Database.getWatches) {
-                        watches => complete(watches)
-                    }
-                }
-            } ~
-            post {
-                decompressRequest() {
-                    entity(as[String]) { request =>
-                        println("POST /hazard/watch/" ++ watchId.toString ++ ": " ++ request)
-                        val jsonItem = JsonParser(request).convertTo[Watch]
-                        respondWithMediaType(`application/json`) {
-                            onSuccess(Database.add(jsonItem.copy(user = watchId.toString))) {
-                                item => complete(item)
-                            }
-                        }
-                    }
-                }
-            }
-        } ~
-        path("hazard" / "around" / RestPath) { watchId =>
-            get {
-                parameters("lat".as[Double], "lon".as[Double], "alt".as[Double], "radius".as[Int]) { (lat, lon, alt, radius) =>
-                    println("GET /hazard/around/"
-                        ++ watchId.toString ++ " "
-                        ++ lat.toString ++ " "
-                        ++ lon.toString ++ " "
-                        ++ alt.toString ++ " "
-                        ++ radius.toString
-                    )
-                    respondWithMediaType(`application/json`) {
-                        onSuccess(Database.getAround(lat, lon, alt, radius)) {
-                            issues => complete(issues)
-                        }
-                    }
-                }
-            }
-        }*/
 }

@@ -134,4 +134,7 @@ object Database {
         ).cursor[Issue].collect[List]().map(_.map(issueToDistanced(latitude, longitude)).filter(closeEnough(radius)))
     }
 
+    def removeIssue(id: String) =
+        issues.remove(BSONDocument("_id" -> BSONObjectID(id)))
+
 }

@@ -66,7 +66,6 @@ trait LocalService extends HttpService {
             }
         } ~
         path("hazard" / "issue" / "next" / RestPath) { watchId =>
-            //GET /hazard/issue/next/${watchid}?cmd=get&lat=-xx.xxxxxx&lon=-xx.xxxxxx&heading=xxx.xxx&radius=xxx.xx
             println("GET /hazard/issue/next/" ++ watchId.toString)
             get {
                 parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double], "radius".as[Double]) {
@@ -79,7 +78,7 @@ trait LocalService extends HttpService {
                         )
                         if ("get" == cmd) {
                             respondWithMediaType(`application/json`) {
-                                onSuccess(Database.getAround(lat, lon, radius)) { issues: List[DistancedIssue] =>
+                                onSuccess(Database.getAround(lat, lon, radius)) { issues =>
                                     if (0 < issues.length) complete(issues.sortBy(_.distance).head)
                                     else complete("""{ "count": 0 } """)
                                 }
@@ -89,7 +88,31 @@ trait LocalService extends HttpService {
                     }
                 }
             }
+        } ~
+        path("hazard" / "issue" / "confirm" / RestPath) { watchId =>
+            println("GET /hazard/issue/next/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "id".as[String], "confirm".as[Int]) {
+                    (cmd, id, confirm) => {
+                        println("?" ++ cmd ++ " " ++
+                            id ++ " " ++
+                            confirm.toString
+                        )
+                        if ("post" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                if (confirm == 0) {
+                                    onSuccess(Database.removeIssue(id)) {
+                                        _ => complete( """{ "code": 0, "description": "Success" }""")
+                                    }
+                                } else complete( """{ "code": 0, "description": "Success" }""")
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
         }
+
 
 
 

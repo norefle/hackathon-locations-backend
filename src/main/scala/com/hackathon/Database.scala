@@ -30,9 +30,9 @@ object BSONSerializer {
                 bson.getAs[Long]("timestamp").get,
                 bson.getAs[Long]("type").get,
                 bson.getAs[String]("name").get,
+                bson.getAs[Long]("severity").get,
                 bson.getAs[Double]("longitude").get,
                 bson.getAs[Double]("latitude").get,
-                bson.getAs[Double]("altitude").get,
                 bson.getAs[String]("creator").get
             )
 
@@ -40,10 +40,10 @@ object BSONSerializer {
             BSONDocument(
                 "timestamp" -> DateTime.now.getMillis,
                 "type" -> item.issueType,
-                "name" -> item.name,
+                "name" -> item.issueName,
+                "severity" -> item.severity,
                 "longitude" -> item.longitude,
                 "latitude" -> item.latitude,
-                "altitude" -> item.altitude,
                 "creator" -> item.creator
             )
     }

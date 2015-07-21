@@ -9,8 +9,8 @@ import spray.routing.HttpService
 import scala.concurrent.ExecutionContext.Implicits.global
 
 object LocalJsonProtocol extends DefaultJsonProtocol {
-    implicit val issueTypeFormat = jsonFormat2(IssueType)
-    implicit val issueFormat = jsonFormat7(Issue)
+    implicit val issueTypeFormat = jsonFormat2(IssueType.apply)
+    implicit val issueFormat = jsonFormat7(Issue.apply)
     implicit val watchFormat = jsonFormat3(Watch)
 }
 
@@ -25,6 +25,29 @@ trait LocalService extends HttpService {
     import LocalJsonProtocol._
 
     val route =
+        path("hazard" / "issue" / "report" / RestPath) { watchId =>
+            println("GET /hazard/issue/report/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "severity".as[Int], "heading".as[Double], "speed".as[Double]) {
+                    (cmd, lat, lon, severity, heading, speed) => {
+                        println("GET /hazard/issue/report" ++ cmd ++ " " ++
+                            lat.toString ++ " " ++
+                            lon.toString ++ " " ++
+                            severity.toString ++ " " ++
+                            heading.toString ++ " " ++
+                            speed.toString
+                        )
+                        if ("post" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.add(Issue(lat, lon, severity, watchId.toString))) {
+                                    _ => complete( """{ "code": 0, "description": "Success" }""")
+                                }
+                            }
+                        } else reject
+                    }
+                }
+            }
+        } /*~
         path("hazard" / "issue" / RestPath) { watchId =>
             get {
 
@@ -89,5 +112,5 @@ trait LocalService extends HttpService {
                     }
                 }
             }
-        }
+        }*/
 }

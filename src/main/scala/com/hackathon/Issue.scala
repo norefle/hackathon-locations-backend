@@ -24,6 +24,7 @@ object Severity {
 }
 
 case class Issue(
+    id: String,
     timestamp: Long,
     issueType: Long,
     issueName: String,
@@ -33,8 +34,11 @@ case class Issue(
     creator: String
 )
 
+case class DistancedIssue(count: Int, id: String, `type`: Long, severity: Long, latitude: Double, longitude: Double, distance: Double)
+
 object Issue {
     def apply(latitude: Double, longitude: Double, severity: Long, creator: String): Issue = Issue(
+        "",
         DateTime.now.getMillis,
         0,
         IssueType(0).name,

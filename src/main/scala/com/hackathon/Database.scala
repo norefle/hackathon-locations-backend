@@ -27,6 +27,7 @@ object BSONSerializer {
     implicit object IssueFormatter extends BSONDocumentReader[Issue] with BSONDocumentWriter[Issue] {
         def read(bson: BSONDocument): Issue =
             Issue(
+                bson.getAs[BSONObjectID]("_id").get.stringify,
                 bson.getAs[Long]("timestamp").get,
                 bson.getAs[Long]("type").get,
                 bson.getAs[String]("name").get,
@@ -80,20 +81,33 @@ object Database {
     val issueTypes = db(ISSUETYPES)
     val watches = db(WATCHES)
 
-    private def closeEnough(latitude: Double, longitude: Double, radius: Double)(issue: Issue): Boolean = {
+    private def getDistance(latitude1: Double, longitude1: Double, latitude2: Double, longitude2: Double): Double = {
         val earthRadius = 6378.137 // km
-        val dlat = (latitude - issue.latitude) * Math.PI / 180.0
-        val dlon = (longitude - issue.longitude) * Math.PI / 180.0
+        val dlat = (latitude1 - latitude2) * Math.PI / 180.0
+        val dlon = (longitude1 - longitude2) * Math.PI / 180.0
         val a = Math.sin(dlat / 2) * Math.sin( dlat / 2) +
-            Math.cos(latitude * Math.PI / 180) * Math.cos(issue.latitude * Math.PI / 180) *
+            Math.cos(latitude1 * Math.PI / 180) * Math.cos(latitude2 * Math.PI / 180) *
                 Math.sin(dlon / 2) * Math.sin(dlon / 2)
         val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 
-        val distance = earthRadius * c * 1000
-
-        println(s"Distance is ${distance}m")
-        distance <= radius
+        earthRadius * c * 1000
     }
+
+    private def closeEnough(radius: Double)(issue: DistancedIssue): Boolean = {
+        println(s"Distance is ${issue.distance}m")
+        issue.distance <= radius
+    }
+
+    private def issueToDistanced(latitude: Double, longitude: Double)(issue: Issue): DistancedIssue =
+        DistancedIssue(
+            1,
+            issue.id,
+            issue.issueType,
+            issue.severity,
+            issue.latitude,
+            issue.longitude,
+            getDistance(latitude, longitude, issue.latitude, issue.longitude)
+        )
 
     def add(item: Issue): Future[Issue] = issues.insert(item).map { case _ => item }
 
@@ -107,7 +121,7 @@ object Database {
     def getWatches: Future[List[Watch]] =
         watches.find(BSONDocument.empty).cursor[Watch].collect[List]()
 
-    def getAround(latitude: Double, longitude: Double, radius: Double): Future[List[Issue]] = {
+    def getAround(latitude: Double, longitude: Double, radius: Double): Future[List[DistancedIssue]] = {
         println("Get around here", latitude, longitude, radius)
         issues.find(BSONDocument("$and" ->
             BSONArray(
@@ -117,7 +131,7 @@ object Database {
                 BSONDocument("longitude" -> BSONDocument("$lt" -> (longitude + 0.01)))
             )
         )
-        ).cursor[Issue].collect[List]().map(_.filter(closeEnough(latitude, longitude, radius)))
+        ).cursor[Issue].collect[List]().map(_.map(issueToDistanced(latitude, longitude)).filter(closeEnough(radius)))
     }
 
 }

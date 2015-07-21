@@ -64,6 +64,31 @@ trait LocalService extends HttpService {
                     }
                 }
             }
+        } ~
+        path("hazard" / "issue" / "next" / RestPath) { watchId =>
+            //GET /hazard/issue/next/${watchid}?cmd=get&lat=-xx.xxxxxx&lon=-xx.xxxxxx&heading=xxx.xxx&radius=xxx.xx
+            println("GET /hazard/issue/next/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double], "radius".as[Double]) {
+                    (cmd, lat, lon, heading, radius) => {
+                        println("?" ++ cmd ++ " " ++
+                            lat.toString ++ " " ++
+                            lon.toString ++ " " ++
+                            heading.toString ++ " " ++
+                            radius.toString
+                        )
+                        if ("get" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.getAround(lat, lon, radius)) { issues: List[DistancedIssue] =>
+                                    if (0 < issues.length) complete(issues.sortBy(_.distance).head)
+                                    else complete("""{ "count": 0 } """)
+                                }
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
         }
 
 

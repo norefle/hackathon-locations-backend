@@ -1,5 +1,6 @@
 package com.hackathon
 
+import com.hackathon.BSONSerializer.PointFormatter
 import reactivemongo.api._
 import reactivemongo.bson._
 import reactivemongo.core.commands.LastError
@@ -27,9 +28,11 @@ object BSONSerializer {
         def read(bson: BSONDocument): Watch =
             Watch(
                 bson.getAs[String]("user").get,
-                bson.getAs[String]("description").get,
-                bson.getAs[List[Point]]("splits").get,
-                bson.getAs[Double]("traveled").get
+                bson.getAs[String]("description").getOrElse(""),
+                bson.getAs[List[Point]]("splits").getOrElse(List.empty),
+                bson.getAs[Double]("traveled").getOrElse(0.0),
+                bson.getAs[Double]("heading").getOrElse(0.0),
+                bson.getAs[Double]("speed").getOrElse(0.0)
             )
 
         def write(watch: Watch): BSONDocument =
@@ -37,7 +40,9 @@ object BSONSerializer {
                 "user" -> watch.user,
                 "description" -> watch.description,
                 "splits" -> watch.splits,
-                "traveled" -> watch.traveled
+                "traveled" -> watch.traveled,
+                "heading" -> watch.heading,
+                "speed" -> watch.speed
             )
     }
 
@@ -178,6 +183,15 @@ object Database {
             BSONDocument("user" -> watchId),
             Watch(watchId, lat, lon),
             upsert = true
+        )
+
+    def addSplit(watchId: String, lat: Double, lon: Double, heading: Double, speed: Double) =
+        watches.update(
+            BSONDocument("user" -> watchId),
+            BSONDocument(
+                "$set" -> BSONDocument("heading" -> heading, "speed" -> speed),
+                "$push" -> BSONDocument("splits" -> PointFormatter.write(Point(lat, lon)))
+            )
         )
 
 }

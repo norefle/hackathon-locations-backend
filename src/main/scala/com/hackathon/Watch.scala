@@ -6,9 +6,11 @@ case class Watch(
     user: String,
     description: String,
     splits: List[Point],
-    traveled: Double
+    traveled: Double,
+    heading: Double,
+    speed: Double
 )
 
 object Watch {
-    def apply(id: String, lat: Double, lon: Double): Watch = Watch(id, "Vivoactive watch", List(Point(lat, lon)), 0)
+    def apply(id: String, lat: Double, lon: Double): Watch = Watch(id, "Vivoactive watch", List(Point(lat, lon)), 0, 0, 0)
 }

@@ -3,6 +3,9 @@
 <head>
 <script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="http://js.api.here.com/se/2.5.4/jsl.js" type="text/javascript" charset="utf-8"></script>
+
+<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+
 <style type="text/css">
     html {
         overflow:hidden;
@@ -29,12 +32,23 @@
 <body>
     <div id="mapContainer"></div>
     <script type="text/javascript">
+        function iconByType(type) {
+            // 0 - unknow, 1  - glass, 2 - construction, 3 - car on lane, 4 - bike crash
+            switch (type) {
+                case 1: return "glass.png";
+                case 2: return "closure.png";
+                case 3: return "parking.png";
+            }
+
+            return "unknown.png";
+        }
+
         nokia.Settings.set("app_id", "");
         nokia.Settings.set("app_code", "");
         var map = new nokia.maps.map.Display(document.getElementById("mapContainer"),
             {
-                zoomLevel: 10,
-                center: [38.893123, -94.893123],
+                zoomLevel: 13,
+                center: [52.526768, 13.393261], // Berlin
                 components: [
                     new nokia.maps.map.component.Behavior(),
                     new nokia.maps.map.component.ZoomBar(),
@@ -49,10 +63,19 @@
             var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
             var red = new nokia.maps.util.Brush({ color: "#ff0000"});
             $.each(data.issues, function(i, item) {
-                var issue = new nokia.maps.map.StandardMarker([item.latitude, item.longitude],
-                    { brush: item.severity === 1 ? orange : red, text: item.type }
+                var issueIcon = new nokia.maps.map.Marker(
+                    new nokia.maps.geo.Coordinate(item.latitude, item.longitude),
+                    {
+                        title: "marker",
+                        visibility: true,
+                        itemId: item.id,
+                        icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
+                        // Offset the top left icon corner so that it's
+                        // Centered above the coordinate
+                        //anchor: new nokia.maps.util.Point(-32, -32)
+                    }
                 );
-                map.objects.add(issue);
+                map.objects.add(issueIcon);
             });
         }).fail(function(error) {
             console.log("Failure", error);

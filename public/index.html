@@ -57,9 +57,9 @@
             }
         );
 
-        var apiUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
-        $.getJSON(apiUrl).done(function(data) {
-            console.log("Done", data);
+        var issueUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
+        $.getJSON(issueUrl).done(function(data) {
+            console.log("Issue", data);
             var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
             var red = new nokia.maps.util.Brush({ color: "#ff0000"});
             $.each(data.issues, function(i, item) {
@@ -70,15 +70,27 @@
                         visibility: true,
                         itemId: item.id,
                         icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
-                        // Offset the top left icon corner so that it's
-                        // Centered above the coordinate
-                        //anchor: new nokia.maps.util.Point(-32, -32)
                     }
                 );
                 map.objects.add(issueIcon);
             });
         }).fail(function(error) {
-            console.log("Failure", error);
+            console.log("Issue failure", error);
+        });
+
+        var watchUrl = "http://localhost:8080/hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
+        $.getJSON(watchUrl).done(function(data) {
+            console.log("Watch", data);
+            map.objects.add(new nokia.maps.map.Marker(
+             new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
+                {
+                    title: "Watch",
+                    visibility: true,
+                    icon: "img/watch.png"
+                }
+            ))
+        }).fail(function(error) {
+                console.log("Watch failure", error);
         });
     </script>
 </body>

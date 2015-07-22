@@ -156,7 +156,6 @@ trait LocalService extends HttpService {
             }
         } ~
         path("hazard" / "watch" / "start" / RestPath) { watchId =>
-            // GET /hazard/watch/start/${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx&heading=xxx.xx
             println("GET /hazard/watch/start/" ++ watchId.toString)
             get {
                 parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double]) {
@@ -179,7 +178,6 @@ trait LocalService extends HttpService {
             }
         } ~
         path("hazard" / "watch" / "report" / RestPath) { watchId =>
-            // GET /hazard/watch/report${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx&heading=xxx.xx&speed=xx.xxx
             println("GET /hazard/watch/report/" ++ watchId.toString)
             get {
                 parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double], "speed".as[Double]) {
@@ -198,6 +196,18 @@ trait LocalService extends HttpService {
                             }
                         }
                         else reject
+                    }
+                }
+            }
+        } ~
+        path("hazard" / "watch" / "last" / RestPath) { watchId =>
+            println("GET /hazard/watch/last/" ++ watchId.toString)
+            get {
+                respondWithHeader(RawHeader("Access-Control-Allow-Origin", "*")) {
+                    respondWithMediaType(`application/json`) {
+                        onSuccess(Database.getWatch(watchId.toString)) {
+                            watches => if (!watches.isEmpty) complete(watches.head) else reject
+                        }
                     }
                 }
             }

@@ -140,6 +140,18 @@ object Database {
         issue.longitude
     )
 
+    private def watchToWatchPosition(watch: Watch): WatchPosition = {
+        val lastPosition = if (watch.splits.isEmpty) Point(0, 0) else watch.splits.last
+        WatchPosition(
+            watch.user,
+            watch.description,
+            lastPosition.latitude,
+            lastPosition.longitude,
+            watch.heading,
+            watch.speed
+        )
+    }
+
     def add(item: Issue): Future[Issue] = issues.insert(item).map { case _ => item }
 
     def add(item: Watch): Future[Watch] = watches.insert(item).map { case _ => item }
@@ -149,8 +161,8 @@ object Database {
     def getIssues: Future[List[Issue]] =
         issues.find(BSONDocument.empty).cursor[Issue].collect[List]()
 
-    def getWatches: Future[List[Watch]] =
-        watches.find(BSONDocument.empty).cursor[Watch].collect[List]()
+    def getWatch(id: String): Future[List[WatchPosition]] =
+        watches.find(BSONDocument("user" -> id)).cursor[Watch].collect[List]().map(_.map(watchToWatchPosition(_)))
 
     def getAround(latitude: Double, longitude: Double, radius: Double): Future[List[DistancedIssue]] = {
         println("Get around here", latitude, longitude, radius)

@@ -140,6 +140,10 @@ Response:
         "total": 12030.2 // total traveled distance
     }
 
+#### Get last known position of the watch
+
+    GET /hazard/watch/last/${watchid}
+
 #### Examples
 
 ````````````````````````````````````````````````````````````````````````````````
@@ -161,6 +165,8 @@ http://localhost:8080/hazard/issue/update/15700324b410fee6e51389d698f378b7357bc2
 http://localhost:8080/hazard/watch/start/15700324b410fee6e51389d698f378b7357bc249?cmd=post&lat=52.526768&lon=13.393261&heading=0.0
 
 http://localhost:8080/hazard/watch/report/15700324b410fee6e51389d698f378b7357bc249?cmd=post&lat=52.527768&lon=13.394261&heading=0.0&speed=10.0
+
+http://localhost:8080/hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249
 
 ````````````````````````````````````````````````````````````````````````````````
 

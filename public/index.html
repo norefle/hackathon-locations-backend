@@ -57,41 +57,53 @@
             }
         );
 
-        var issueUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
-        $.getJSON(issueUrl).done(function(data) {
-            console.log("Issue", data);
-            var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
-            var red = new nokia.maps.util.Brush({ color: "#ff0000"});
-            $.each(data.issues, function(i, item) {
-                var issueIcon = new nokia.maps.map.Marker(
-                    new nokia.maps.geo.Coordinate(item.latitude, item.longitude),
+        var mapObjects = [];
+
+        function update() {
+            mapObjects.forEach(function(object) {
+                map.objects.remove(object);
+            });
+            mapObjects = [];
+
+            var issueUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
+            $.getJSON(issueUrl).done(function(data) {
+                var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
+                var red = new nokia.maps.util.Brush({ color: "#ff0000"});
+                $.each(data.issues, function(i, item) {
+                    var issueIcon = new nokia.maps.map.Marker(
+                        new nokia.maps.geo.Coordinate(item.latitude, item.longitude),
+                        {
+                            title: "marker",
+                            visibility: true,
+                            itemId: item.id,
+                            icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
+                        }
+                    );
+                    map.objects.add(issueIcon);
+                    mapObjects.push(issueIcon);
+                });
+            }).fail(function(error) {
+                console.log("Issue failure", error);
+            });
+
+            var watchUrl = "http://localhost:8080/hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
+            $.getJSON(watchUrl).done(function(data) {
+                var watchIcon = new nokia.maps.map.Marker(
+                    new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
                     {
-                        title: "marker",
+                        title: "Watch",
                         visibility: true,
-                        itemId: item.id,
-                        icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
+                        icon: "img/watch.png"
                     }
                 );
-                map.objects.add(issueIcon);
+                map.objects.add(watchIcon);
+                mapObjects.push(watchIcon);
+            }).fail(function(error) {
+                    console.log("Watch failure", error);
             });
-        }).fail(function(error) {
-            console.log("Issue failure", error);
-        });
+        }
 
-        var watchUrl = "http://localhost:8080/hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
-        $.getJSON(watchUrl).done(function(data) {
-            console.log("Watch", data);
-            map.objects.add(new nokia.maps.map.Marker(
-             new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
-                {
-                    title: "Watch",
-                    visibility: true,
-                    icon: "img/watch.png"
-                }
-            ))
-        }).fail(function(error) {
-                console.log("Watch failure", error);
-        });
+        window.setInterval(update, 5000);
     </script>
 </body>
 </html>

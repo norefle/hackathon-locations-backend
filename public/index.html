@@ -4,7 +4,7 @@
 <script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="http://js.api.here.com/se/2.5.4/jsl.js" type="text/javascript" charset="utf-8"></script>
 
-<link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+<link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
 
 <style type="text/css">
     html {
@@ -65,8 +65,9 @@
             });
             mapObjects = [];
 
-            var issueUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
+            var issueUrl = "hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
             $.getJSON(issueUrl).done(function(data) {
+                console.log("Issue done");
                 var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
                 var red = new nokia.maps.util.Brush({ color: "#ff0000"});
                 $.each(data.issues, function(i, item) {
@@ -86,8 +87,9 @@
                 console.log("Issue failure", error);
             });
 
-            var watchUrl = "http://localhost:8080/hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
+            var watchUrl = "hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
             $.getJSON(watchUrl).done(function(data) {
+                console.log("Watch done");
                 var watchIcon = new nokia.maps.map.Marker(
                     new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
                     {

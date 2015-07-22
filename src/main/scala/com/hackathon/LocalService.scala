@@ -1,6 +1,8 @@
 package com.hackathon
 
+import java.io._
 import akka.actor.Actor
+import spray.http._
 import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
 import spray.json._
@@ -16,8 +18,9 @@ class LocalServiceActor extends Actor with LocalService {
 }
 
 trait LocalService extends HttpService {
-
     import LocalJsonProtocol._
+
+    def readContent(name: String): String = scala.io.Source.fromFile(name).getLines.mkString("\n")
 
     val route =
         path("hazard" / "issue" / "report" / RestPath) { watchId =>
@@ -210,6 +213,25 @@ trait LocalService extends HttpService {
                         }
                     }
                 }
+            }
+        } ~
+        path("") {
+            get {
+                respondWithMediaType(`text/html`) {
+                    complete(readContent("public/index.html"))
+                }
+            }
+        } ~
+        path("img" / "favicon.ico") {
+            println("GET /img/favicon.ico")
+            get {
+                complete(HttpEntity(`image/x-icon`, HttpData(new File("public/img/favicon.ico"))))
+            }
+        } ~
+        path("img" / RestPath) { image =>
+            println("GET /img/" ++ image.toString)
+            get {
+                complete(HttpEntity(`image/png`, HttpData(new File("public/img/" ++ image.toString))))
             }
         }
 }

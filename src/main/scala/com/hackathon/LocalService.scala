@@ -5,6 +5,7 @@ import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
 import spray.json._
 import spray.routing.HttpService
+import spray.http.HttpHeaders.RawHeader
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -119,10 +120,12 @@ trait LocalService extends HttpService {
                     (cmd, since) => {
                         println("?" ++ cmd ++ " " ++ since.toString)
                         if ("get" == cmd) {
-                            respondWithMediaType(`application/json`) {
-                                onSuccess(Database.getIssuesSince(since)) {
-                                        issues => complete(IssuesSince(issues.length, issues.sortBy(_.timestamp)))
-                                    }
+                            respondWithHeader(RawHeader("Access-Control-Allow-Origin", "*")) {
+                                respondWithMediaType(`application/json`) {
+                                    onSuccess(Database.getIssuesSince(since)) {
+                                            issues => complete(IssuesSince(issues.length, issues.sortBy(_.timestamp)))
+                                        }
+                                }
                             }
                         }
                         else reject

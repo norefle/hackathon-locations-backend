@@ -1,0 +1,62 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript" charset="utf-8"></script>
+<script src="http://js.api.here.com/se/2.5.4/jsl.js" type="text/javascript" charset="utf-8"></script>
+<style type="text/css">
+    html {
+        overflow:hidden;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        position: absolute;
+        overflow:hidden;
+        width: 100%;
+        height: 100%;
+    }
+
+    #mapContainer {
+        width: 100%;
+        height: 100%;
+        left: 0;
+        top: 0;
+        position: absolute;
+    }
+</style>
+</head>
+<body>
+    <div id="mapContainer"></div>
+    <script type="text/javascript">
+        nokia.Settings.set("app_id", "");
+        nokia.Settings.set("app_code", "");
+        var map = new nokia.maps.map.Display(document.getElementById("mapContainer"),
+            {
+                zoomLevel: 10,
+                center: [38.893123, -94.893123],
+                components: [
+                    new nokia.maps.map.component.Behavior(),
+                    new nokia.maps.map.component.ZoomBar(),
+                    new nokia.maps.map.component.ScaleBar()
+                ]
+            }
+        );
+
+        var apiUrl = "http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
+        $.getJSON(apiUrl).done(function(data) {
+            console.log("Done", data);
+            var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
+            var red = new nokia.maps.util.Brush({ color: "#ff0000"});
+            $.each(data.issues, function(i, item) {
+                var issue = new nokia.maps.map.StandardMarker([item.latitude, item.longitude],
+                    { brush: item.severity === 1 ? orange : red, text: item.type }
+                );
+                map.objects.add(issue);
+            });
+        }).fail(function(error) {
+            console.log("Failure", error);
+        });
+    </script>
+</body>
+</html>

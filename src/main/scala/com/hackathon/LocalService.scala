@@ -154,5 +154,28 @@ trait LocalService extends HttpService {
                     }
                 }
             }
+        } ~
+        path("hazard" / "watch" / "start" / RestPath) { watchId =>
+            // GET /hazard/watch/start/${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx&heading=xxx.xx
+            println("GET /hazard/watch/start/" ++ watchId.toString)
+            get {
+                parameters("cmd".as[String], "lat".as[Double], "lon".as[Double], "heading".as[Double]) {
+                    (cmd, lat, lon, heading) => {
+                        println("?" ++ cmd ++ " " ++
+                            lat.toString ++ " " ++
+                            lon.toString ++ " " ++
+                            heading.toString
+                        )
+                        if ("post" == cmd) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.setOrigin(watchId.toString, lat, lon, heading)) {
+                                    _ => complete( """{ "code": 0, "description": "Success" }""")
+                                }
+                            }
+                        }
+                        else reject
+                    }
+                }
+            }
         }
 }

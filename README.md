@@ -117,24 +117,48 @@ Response:
         "to": "Machnower Str 10, 14165 Berlin"
     }
 
+#### Start traveling
+
+    GET /hazard/watch/start/${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx&heading=xxx.xx
+
+#### Post last position of the watch
+
+    GET /hazard/watch/report${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx&heading=xxx.xx&speed=xx.xxx
+
+#### Stop traveling
+
+    GET /hazard/watch/stop/${watchid}?cmd=post&lat=xx.xxxxxx&lon=xx.xxxxxx
+
+#### Get cumulative distance
+
+    GET /hazard/watch/distance/${watchid}
+
+Response:
+
+    {
+        "split": 100.2, // distance for last part of the route (part between two last reposting)
+        "total": 12030.2 // total traveled distance
+    }
+
 #### Examples
 
 ````````````````````````````````````````````````````````````````````````````````
 
 hazard-vivo 15700324b410fee6e51389d698f378b7357bc249
 
-localhost:8080/hazard/issue/report/15700324b410fee6e51389d698f378b7357bc249?cmd=post&lat=38.893123&lon=-94.893123&severity=1&heading=0.0&speed=0.0
+http://localhost:8080/hazard/issue/report/15700324b410fee6e51389d698f378b7357bc249?cmd=post&lat=38.893123&lon=-94.893123&severity=1&heading=0.0&speed=0.0
 
-localhost:8080/hazard/issue/count/15700324b410fee6e51389d698f378b7357bc249?cmd=get&lat=38.893123&lon=-94.893123&heading=0.0&radius=1000
+http://localhost:8080/hazard/issue/count/15700324b410fee6e51389d698f378b7357bc249?cmd=get&lat=38.893123&lon=-94.893123&heading=0.0&radius=1000
 
-localhost:8080/hazard/issue/next/15700324b410fee6e51389d698f378b7357bc249?cmd=get&lat=38.893123&lon=-94.893123&heading=0.0&radius=1000
+http://localhost:8080/hazard/issue/next/15700324b410fee6e51389d698f378b7357bc249?cmd=get&lat=38.893123&lon=-94.893123&heading=0.0&radius=1000
 
-localhost:8080/hazard/issue/confirm/15700324b410fee6e51389d698f378b7357bc249?cmd=post&id=55ae31ccff7f1d202fe5ebdf&confirm=1
+http://localhost:8080/hazard/issue/confirm/15700324b410fee6e51389d698f378b7357bc249?cmd=post&id=55ae31ccff7f1d202fe5ebdf&confirm=1
 
-localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0
+http://localhost:8080/hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0
 
 http://localhost:8080/hazard/issue/update/15700324b410fee6e51389d698f378b7357bc249?cmd=post&id=55ae321dff7f1d202fe5ebe0&severity=2&type=2
 
+http://localhost:8080/hazard/watch/start/15700324b410fee6e51389d698f378b7357bc249?cmd=post&lat=52.526768&lon=13.393261&heading=0.0
 
 ````````````````````````````````````````````````````````````````````````````````
 

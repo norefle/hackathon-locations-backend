@@ -9,18 +9,35 @@ import scala.concurrent.Future
 import org.joda.time.DateTime
 
 object BSONSerializer {
+    implicit object PointFormatter extends BSONDocumentReader[Point] with BSONDocumentWriter[Point] {
+        def read(bson: BSONDocument): Point =
+            Point(
+                bson.getAs[Double]("latitude").get,
+                bson.getAs[Double]("longitude").get
+            )
+
+        def write(item: Point): BSONDocument =
+            BSONDocument(
+                "latitude" -> item.latitude,
+                "longitude" -> item.longitude
+            )
+    }
+
     implicit object WatchFormatter extends BSONDocumentReader[Watch] with BSONDocumentWriter[Watch] {
         def read(bson: BSONDocument): Watch =
             Watch(
-                "",//bson.getAs[BSONObjectID]("_id").get.stringify,
                 bson.getAs[String]("user").get,
-                bson.getAs[String]("description").get
+                bson.getAs[String]("description").get,
+                bson.getAs[List[Point]]("splits").get,
+                bson.getAs[Double]("traveled").get
             )
 
         def write(watch: Watch): BSONDocument =
             BSONDocument(
                 "user" -> watch.user,
-                "description" -> watch.description
+                "description" -> watch.description,
+                "splits" -> watch.splits,
+                "traveled" -> watch.traveled
             )
     }
 
@@ -154,6 +171,13 @@ object Database {
         issues.update(
             BSONDocument("_id" -> BSONObjectID(id)),
             BSONDocument("$set" -> BSONDocument("severity" -> severity, "type" -> issueType))
+        )
+
+    def setOrigin(watchId: String, lat: Double, lon: Double, heading: Double) =
+        watches.update(
+            BSONDocument("user" -> watchId),
+            Watch(watchId, lat, lon),
+            upsert = true
         )
 
 }

@@ -9,11 +9,4 @@ import spray.http.MediaTypes._
 class LocalServiceSpec extends Specification with Specs2RouteTest with LocalService {
     def actorRefFactory = system
 
-    "LocalService" should {
-        "returns error 404 for GET request to root path" in {
-            Get() ~> route ~> check {
-                handled must beFalse
-            }
-        }
-    }
 }

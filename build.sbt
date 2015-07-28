@@ -28,4 +28,6 @@ libraryDependencies ++= {
     )
 }
 
+assemblyJarName := "hazardous-0.1.0.jar"
+
 Revolver.settings

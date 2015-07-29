@@ -27,22 +27,34 @@
         top: 0;
         position: absolute;
     }
+
+    #controls {
+        width: 50%;
+        position: absolute;
+        margin: 20px;
+        padding: 5px;
+        top: 0;
+        left 0;
+        display: block;
+        background-color: #fafaff;
+    }
+
+    .position {
+        font-size: small;
+    }
 </style>
 </head>
 <body>
     <div id="mapContainer"></div>
+    <div id="controls">
+        <span>Report hazard</span>
+        <ul>
+            <li>Reporter: <span id="watchName"></span>&nbsp;<span id="watchPosition" class="position"></span></li>
+            <li>Severity: <span id="reportSev"></span></li>
+            <li>Position: [<span id="reportLat"></span>;&nbsp;<span id="reportLon"></span>]</li>
+        </ul>
+    </div>
     <script type="text/javascript">
-        function iconByType(type) {
-            // 0 - unknow, 1  - glass, 2 - construction, 3 - car on lane, 4 - bike crash
-            switch (type) {
-                case 1: return "glass.png";
-                case 2: return "closure.png";
-                case 3: return "parking.png";
-            }
-
-            return "unknown.png";
-        }
-
         nokia.Settings.set("app_id", "");
         nokia.Settings.set("app_code", "");
         var map = new nokia.maps.map.Display(document.getElementById("mapContainer"),
@@ -59,50 +71,111 @@
 
         var mapObjects = [];
 
-        function update() {
+        var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
+        var red = new nokia.maps.util.Brush({ color: "#ff0000"});
+
+        var vivoWatchId = "15700324b410fee6e51389d698f378b7357bc249";
+
+        map.addListener("click", function(evt) {
+            var position = map.pixelToGeo(evt.clientX, evt.clientY);
+            $("#reportSev").text(0 === evt.button ? 1 : 2);
+            $("#reportLat").text(position.latitude);
+            $("#reportLon").text(position.longitude);
+        });
+
+        $("#controls").click(function() {
+            var url = "/hazard/issue/report/"
+                + vivoWatchId
+                + "?cmd=post&lat=" + $("#reportLat").text()
+                + "&lon=" + $("#reportLon").text()
+                + "&severity=" + $("#reportSev").text()
+                + "&heading=0.0&speed=0.0";
+            $.getJSON(url).done(function(data) {
+                console.log("report:", data);
+            }).fail(function(error) {
+                console.log("Report failed:", error);
+            });
+        });
+
+        function iconByType(type) {
+            // 0 - unknow, 1  - glass, 2 - construction, 3 - car on lane, 4 - bike crash
+            switch (type) {
+                case 1: return "glass.png";
+                case 2: return "closure.png";
+                case 3: return "parking.png";
+            }
+
+            return "unknown.png";
+        }
+
+        function cleanUp() {
             mapObjects.forEach(function(object) {
                 map.objects.remove(object);
             });
             mapObjects = [];
+        }
 
-            var issueUrl = "hazard/issue/new/15700324b410fee6e51389d698f378b7357bc249?cmd=get&since=0";
+        function addMapObject(object) {
+            map.objects.add(object);
+            mapObjects.push(object);
+        }
+
+        function showHazards(clientId) {
+            var issueUrl = "hazard/issue/new/" + clientId +"?cmd=get&since=0";
+
             $.getJSON(issueUrl).done(function(data) {
-                console.log("Issue done");
-                var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
-                var red = new nokia.maps.util.Brush({ color: "#ff0000"});
                 $.each(data.issues, function(i, item) {
                     var issueIcon = new nokia.maps.map.Marker(
                         new nokia.maps.geo.Coordinate(item.latitude, item.longitude),
                         {
                             title: "marker",
                             visibility: true,
-                            itemId: item.id,
                             icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
+                            data: {
+                                itemId: item.id
+                            }
                         }
                     );
-                    map.objects.add(issueIcon);
-                    mapObjects.push(issueIcon);
+                    addMapObject(issueIcon);
                 });
-            }).fail(function(error) {
-                console.log("Issue failure", error);
-            });
+            }).fail(function(error) { console.log("Issue failure", error); });
+        }
 
-            var watchUrl = "hazard/watch/last/15700324b410fee6e51389d698f378b7357bc249";
+        function showPath(coordinates) {
+            if (coordinates && Array.isArray(coordinates)) {
+                var points = coordinates.map(function(point) { return { lat: point.latitude, lng: point.longitude }; });
+                var path = new nokia.maps.map.Polyline(points);
+                addMapObject(path);
+            }
+        }
+
+        function showWatches(clientId) {
+            var watchUrl = "hazard/watch/last/" + clientId;
             $.getJSON(watchUrl).done(function(data) {
-                console.log("Watch done");
+                $("#watchName").text(data.description);
+                $("#watchPosition").text("[" + data.latitude + "; " + data.longitude + "]");
+                var area = new nokia.maps.map.Circle( {lat: data.latitude, lng: data.longitude}, 250);
                 var watchIcon = new nokia.maps.map.Marker(
                     new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
                     {
                         title: "Watch",
                         visibility: true,
-                        icon: "img/watch.png"
+                        icon: "img/watch.png",
+                        anchor: new nokia.maps.util.Point(24, 24)
                     }
                 );
-                map.objects.add(watchIcon);
-                mapObjects.push(watchIcon);
-            }).fail(function(error) {
-                    console.log("Watch failure", error);
-            });
+
+                showPath(data.splits);
+
+                addMapObject(area);
+                addMapObject(watchIcon);
+            }).fail(function(error) { console.log("Watch failure", error); });
+        }
+
+        function update() {
+            cleanUp();
+            showHazards(vivoWatchId);
+            showWatches(vivoWatchId);
         }
 
         window.setInterval(update, 5000);

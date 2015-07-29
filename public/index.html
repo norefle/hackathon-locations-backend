@@ -1,8 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://code.jquery.com/jquery-1.11.3.min.js" type="text/javascript" charset="utf-8"></script>
 <script src="http://js.api.here.com/se/2.5.4/jsl.js" type="text/javascript" charset="utf-8"></script>
+
+<link rel="stylesheet" href="https://storage.googleapis.com/code.getmdl.io/1.0.2/material.orange-blue.min.css" />
+
+<script src="https://storage.googleapis.com/code.getmdl.io/1.0.2/material.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
 <link rel="shortcut icon" href="img/favicon.ico" type="image/x-icon">
 
@@ -29,30 +37,61 @@
     }
 
     #controls {
-        width: 50%;
-        position: absolute;
         margin: 20px;
-        padding: 5px;
-        top: 0;
-        left 0;
-        display: block;
-        background-color: #fafaff;
+        float: right;
     }
 
     .position {
-        font-size: small;
+        font-size: x-small;
+    }
+    .report-card-event > .mdl-card__actions {
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .report-card-event > .mdl-card__title2 {
+        align-items: flex-start;
+    }
+    .report-card-event > .mdl-card__actions {
+        display: flex;
+        box-sizing: border-box;
+        align-items: center;
+    }
+
+    .details {
+        text-align: center;
+        border: 1px solid;
     }
 </style>
 </head>
 <body>
     <div id="mapContainer"></div>
-    <div id="controls">
-        <span>Report hazard</span>
-        <ul>
-            <li>Reporter: <span id="watchName"></span>&nbsp;<span id="watchPosition" class="position"></span></li>
-            <li>Severity: <span id="reportSev"></span></li>
-            <li>Position: [<span id="reportLat"></span>;&nbsp;<span id="reportLon"></span>]</li>
-        </ul>
+    <div id="controls" class="mdl-card mdl-shadow--4dp report-card-event">
+        <div class="mdl-card__title">
+            <h4 class="mdl-card__title-text">
+                <span id="watchName">Vivo active</span>
+                <span id="watchPosition" class="position">52.526768 | 13.393261</span>
+            </h4>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <div>
+                Please select the hazard place by clicking on the map:
+                <ul>
+                    <li>left mouse click - minor hazard</li>
+                    <li>right mouse click - major hazard</li>
+                </ul>
+            </div>
+            <div class="details">
+                <span id="reportSev">Major</span>&nbsp;|&nbsp;
+                <span id="reportLat">52.526768</span>&nbsp;|&nbsp;
+                <span id="reportLon">13.393261</span>
+            </div>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+            <a id="report" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Report hazard
+            </a>
+            <div class="mdl-layout-spacer"></div>
+            <i class="material-icons">report_problem</i>
+        </div>
     </div>
     <script type="text/javascript">
         nokia.Settings.set("app_id", "");
@@ -78,17 +117,17 @@
 
         map.addListener("click", function(evt) {
             var position = map.pixelToGeo(evt.clientX, evt.clientY);
-            $("#reportSev").text(0 === evt.button ? 1 : 2);
-            $("#reportLat").text(position.latitude);
-            $("#reportLon").text(position.longitude);
+            $("#reportSev").text(0 === evt.button ? "Minor" : "Major");
+            $("#reportLat").text(position.latitude.toFixed(6));
+            $("#reportLon").text(position.longitude.toFixed(6));
         });
 
-        $("#controls").click(function() {
+        $("#report").click(function() {
             var url = "/hazard/issue/report/"
                 + vivoWatchId
                 + "?cmd=post&lat=" + $("#reportLat").text()
                 + "&lon=" + $("#reportLon").text()
-                + "&severity=" + $("#reportSev").text()
+                + "&severity=" + ("Minor" === $("#reportSev").text() ? 1 : 2)
                 + "&heading=0.0&speed=0.0";
             $.getJSON(url).done(function(data) {
                 console.log("report:", data);
@@ -153,7 +192,7 @@
             var watchUrl = "hazard/watch/last/" + clientId;
             $.getJSON(watchUrl).done(function(data) {
                 $("#watchName").text(data.description);
-                $("#watchPosition").text("[" + data.latitude + "; " + data.longitude + "]");
+                $("#watchPosition").text(data.latitude + " | " + data.longitude);
                 var area = new nokia.maps.map.Circle( {lat: data.latitude, lng: data.longitude}, 250);
                 var watchIcon = new nokia.maps.map.Marker(
                     new nokia.maps.geo.Coordinate(data.latitude, data.longitude),

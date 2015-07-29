@@ -147,6 +147,7 @@ object Database {
             watch.description,
             lastPosition.latitude,
             lastPosition.longitude,
+            watch.splits,
             watch.heading,
             watch.speed
         )

@@ -111,6 +111,7 @@
         var mapObjects = [];
 
         var orange = new nokia.maps.util.Brush({ color: "#ffa500"});
+        var pathPen = new nokia.maps.util.Pen({ lineWidth: 2 })
         var red = new nokia.maps.util.Brush({ color: "#ff0000"});
 
         var vivoWatchId = "15700324b410fee6e51389d698f378b7357bc249";
@@ -183,7 +184,7 @@
         function showPath(coordinates) {
             if (coordinates && Array.isArray(coordinates)) {
                 var points = coordinates.map(function(point) { return { lat: point.latitude, lng: point.longitude }; });
-                var path = new nokia.maps.map.Polyline(points);
+                var path = new nokia.maps.map.Polyline(points, { pen: pathPen });
                 addMapObject(path);
             }
         }

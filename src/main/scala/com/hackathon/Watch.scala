@@ -16,6 +16,7 @@ case class WatchPosition(
     description: String,
     latitude: Double,
     longitude: Double,
+    splits: List[Point],
     heading: Double,
     speed: Double
 )

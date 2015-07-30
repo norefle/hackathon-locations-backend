@@ -171,6 +171,7 @@
                             title: "marker",
                             visibility: true,
                             icon: "img/" + (item.severity === 1 ? "orange" : "red") + "/" + iconByType(item.type),
+                            anchor: new nokia.maps.util.Point(12, 12),
                             data: {
                                 itemId: item.id
                             }
@@ -201,7 +202,7 @@
                         title: "Watch",
                         visibility: true,
                         icon: "img/watch.png",
-                        anchor: new nokia.maps.util.Point(24, 24)
+                        anchor: new nokia.maps.util.Point(12, 12)
                     }
                 );
 

@@ -36,21 +36,35 @@
         position: absolute;
     }
 
-    #controls {
+    #wrapper {
         margin: 20px;
         float: right;
+    }
+
+    #controls {
+    }
+
+    #identity {
+        margin-top: 20px;
+    }
+
+    #client {
+        width: 100%;
     }
 
     .position {
         font-size: x-small;
     }
-    .report-card-event > .mdl-card__actions {
+
+    .mdl-card__actions {
         border-color: rgba(255, 255, 255, 0.2);
     }
-    .report-card-event > .mdl-card__title2 {
+
+    .mdl-card__title2 {
         align-items: flex-start;
     }
-    .report-card-event > .mdl-card__actions {
+
+    .mdl-card__actions {
         display: flex;
         box-sizing: border-box;
         align-items: center;
@@ -64,12 +78,32 @@
 </head>
 <body>
     <div id="mapContainer"></div>
+    <div id="wrapper">
+    <div id="identity" class="mdl-card mdl-shadow--4dp identity-card">
+        <div class="mdl-card__title">
+            <h4 class="mdl-card__title-text">Client</h4>
+        </div>
+        <div class="mdl-card__supporting-text">
+            <div>
+                <input type="text" id="client" placeholder="Watch id">
+            </div>
+            <div>
+                <ul>
+                    <li>Name - <span id="watchName">Vivo active</span></li>
+                    <li>Position - <span id="watchPosition" class="position">52.526768 | 13.393261</span></li>
+                </ul>
+            </div>
+        </div>
+        <div class="mdl-card__actions mdl-card--border">
+            <a id="change" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Change</a>
+            <div class="mdl-layout-spacer"></div>
+            <i class="material-icons">watch</i>
+        </div>
+    </div>
+    <br />
     <div id="controls" class="mdl-card mdl-shadow--4dp report-card-event">
         <div class="mdl-card__title">
-            <h4 class="mdl-card__title-text">
-                <span id="watchName">Vivo active</span>
-                <span id="watchPosition" class="position">52.526768 | 13.393261</span>
-            </h4>
+            <h4 class="mdl-card__title-text">Hazard</h4>
         </div>
         <div class="mdl-card__supporting-text">
             <div>
@@ -86,12 +120,11 @@
             </div>
         </div>
         <div class="mdl-card__actions mdl-card--border">
-            <a id="report" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
-            Report hazard
-            </a>
+            <a id="report" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">Report</a>
             <div class="mdl-layout-spacer"></div>
             <i class="material-icons">report_problem</i>
         </div>
+    </div>
     </div>
     <script type="text/javascript">
         nokia.Settings.set("app_id", "");
@@ -114,13 +147,20 @@
         var pathPen = new nokia.maps.util.Pen({ lineWidth: 2 })
         var red = new nokia.maps.util.Brush({ color: "#ff0000"});
 
-        var vivoWatchId = "15700324b410fee6e51389d698f378b7357bc249";
+        var vivoWatchId = "";
 
         map.addListener("click", function(evt) {
             var position = map.pixelToGeo(evt.clientX, evt.clientY);
             $("#reportSev").text(0 === evt.button ? "Minor" : "Major");
             $("#reportLat").text(position.latitude.toFixed(6));
             $("#reportLon").text(position.longitude.toFixed(6));
+        });
+
+        $("#change").click(function() {
+            vivoWatchId = $("#client").val();
+            if (vivoWatchId !== "") {
+                window.setInterval(update, 5000);
+            }
         });
 
         $("#report").click(function() {
@@ -218,8 +258,6 @@
             showHazards(vivoWatchId);
             showWatches(vivoWatchId);
         }
-
-        window.setInterval(update, 5000);
     </script>
 </body>
 </html>

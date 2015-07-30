@@ -4,10 +4,13 @@ import com.hackathon.BSONSerializer.PointFormatter
 import reactivemongo.api._
 import reactivemongo.bson._
 import reactivemongo.core.commands.LastError
+import reactivemongo.core.nodeset.Authenticate
 import spray.routing.directives.OnSuccessFutureMagnet
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import org.joda.time.DateTime
+import com.typesafe.config.ConfigFactory
+
 
 object BSONSerializer {
     implicit object PointFormatter extends BSONDocumentReader[Point] with BSONDocumentWriter[Point] {
@@ -87,17 +90,20 @@ object BSONSerializer {
 }
 
 object Database {
-
     import BSONSerializer.{IssueFormatter, WatchFormatter, IssueTypeFormatter}
+    val config = ConfigFactory.load()
 
-    val ADDRESS = "localhost"
-    val DATABASE = "hackathon"
+    val ADDRESS = config.getString("database.server")
+    val DATABASE = config.getString("database.name")
+    val USER = config.getString("database.user")
+    val PASSWD = config.getString("database.password")
     val ISSUES = "issue"
     val ISSUETYPES = "issuetype"
     val WATCHES = "watch"
 
     val driver = new MongoDriver
-    val connection = driver.connection(List(ADDRESS))
+    val credentials = List(Authenticate(DATABASE, USER, PASSWD))
+    val connection = driver.connection(List(ADDRESS), authentications = credentials)
     val db = connection(DATABASE)
     val issues = db(ISSUES)
     val issueTypes = db(ISSUETYPES)

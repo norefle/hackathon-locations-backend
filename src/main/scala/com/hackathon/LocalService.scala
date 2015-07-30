@@ -2,6 +2,7 @@ package com.hackathon
 
 import java.io._
 import akka.actor.Actor
+import com.typesafe.config.ConfigFactory
 import spray.http._
 import spray.http.MediaTypes._
 import spray.httpx.SprayJsonSupport._
@@ -20,6 +21,11 @@ class LocalServiceActor extends Actor with LocalService {
 trait LocalService extends HttpService {
     import LocalJsonProtocol._
 
+    val config = ConfigFactory.load()
+    val authorized = config.getStringList("database.authorized")
+
+    def hasAccess(clientId: String): Boolean = authorized.contains(clientId)
+
     def readContent(name: String): String = scala.io.Source.fromFile(name).getLines.mkString("\n")
 
     val route =
@@ -35,7 +41,7 @@ trait LocalService extends HttpService {
                             heading.toString ++ " " ++
                             speed.toString
                         )
-                        if ("post" == cmd) {
+                        if ("post" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.add(Issue(lat, lon, severity, watchId.toString))) {
                                     _ => complete( """{ "code": 0, "description": "Success" }""")
@@ -57,7 +63,7 @@ trait LocalService extends HttpService {
                             heading.toString ++ " " ++
                             radius.toString
                         )
-                        if ("get" == cmd) {
+                        if ("get" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.getAround(lat, lon, radius)) {
                                     issues => complete(Radar(issues))
@@ -80,7 +86,7 @@ trait LocalService extends HttpService {
                             heading.toString ++ " " ++
                             radius.toString
                         )
-                        if ("get" == cmd) {
+                        if ("get" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.getAround(lat, lon, radius)) { issues =>
                                     if (0 < issues.length) complete(issues.sortBy(_.distance).head)
@@ -102,7 +108,7 @@ trait LocalService extends HttpService {
                             id ++ " " ++
                             confirm.toString
                         )
-                        if ("post" == cmd) {
+                        if ("post" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 if (confirm == 0) {
                                     onSuccess(Database.removeIssue(id)) {
@@ -122,13 +128,11 @@ trait LocalService extends HttpService {
                 parameters("cmd".as[String], "since".as[Long]) {
                     (cmd, since) => {
                         println("?" ++ cmd ++ " " ++ since.toString)
-                        if ("get" == cmd) {
-                            respondWithHeader(RawHeader("Access-Control-Allow-Origin", "*")) {
-                                respondWithMediaType(`application/json`) {
-                                    onSuccess(Database.getIssuesSince(since)) {
-                                            issues => complete(IssuesSince(issues.length, issues.sortBy(_.timestamp)))
-                                        }
-                                }
+                        if ("get" == cmd && hasAccess(watchId.toString)) {
+                            respondWithMediaType(`application/json`) {
+                                onSuccess(Database.getIssuesSince(since)) {
+                                        issues => complete(IssuesSince(issues.length, issues.sortBy(_.timestamp)))
+                                    }
                             }
                         }
                         else reject
@@ -146,7 +150,7 @@ trait LocalService extends HttpService {
                             severity.toString ++ " " ++
                             `type`.toString
                         )
-                        if ("post" == cmd) {
+                        if ("post" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.updateIssue(id, severity, `type`)) {
                                     _ => complete( """{ "code": 0, "description": "Success" }""")
@@ -168,7 +172,7 @@ trait LocalService extends HttpService {
                             lon.toString ++ " " ++
                             heading.toString
                         )
-                        if ("post" == cmd) {
+                        if ("post" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.setOrigin(watchId.toString, lat, lon, heading)) {
                                     _ => complete( """{ "code": 0, "description": "Success" }""")
@@ -191,7 +195,7 @@ trait LocalService extends HttpService {
                             heading.toString ++ " " ++
                             speed.toString
                         )
-                        if ("post" == cmd) {
+                        if ("post" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
                                 onSuccess(Database.addSplit(watchId.toString, lat, lon, heading, speed)) {
                                     _ => complete( """{ "code": 0, "description": "Success" }""")
@@ -206,12 +210,13 @@ trait LocalService extends HttpService {
         path("hazard" / "watch" / "last" / RestPath) { watchId =>
             println("GET /hazard/watch/last/" ++ watchId.toString)
             get {
-                respondWithHeader(RawHeader("Access-Control-Allow-Origin", "*")) {
-                    respondWithMediaType(`application/json`) {
+                respondWithMediaType(`application/json`) {
+                    if (hasAccess(watchId.toString)) {
                         onSuccess(Database.getWatch(watchId.toString)) {
                             watches => if (!watches.isEmpty) complete(watches.head) else reject
                         }
                     }
+                    else reject
                 }
             }
         } ~

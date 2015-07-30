@@ -23,7 +23,7 @@ libraryDependencies ++= {
         "com.typesafe.akka"         %%  "akka-actor"    % akkaV,
         "com.typesafe.akka"         %%  "akka-testkit"  % akkaV   % "test",
         "org.specs2"                %%  "specs2-core"   % "2.3.11" % "test",
-        "org.reactivemongo"         %%  "reactivemongo" % "0.11.2",
+        "org.reactivemongo"         %%  "reactivemongo" % "0.11.4",
         "com.github.nscala-time"    %%  "nscala-time"   % "2.0.0"
     )
 }

@@ -65,7 +65,7 @@ trait LocalService extends HttpService {
                         )
                         if ("get" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
-                                onSuccess(Database.getAround(lat, lon, radius)) {
+                                onSuccess(Database.getAround(lat, lon, radius, heading)) {
                                     issues => complete(Radar(issues))
                                 }
                             }
@@ -88,8 +88,12 @@ trait LocalService extends HttpService {
                         )
                         if ("get" == cmd && hasAccess(watchId.toString)) {
                             respondWithMediaType(`application/json`) {
-                                onSuccess(Database.getAround(lat, lon, radius)) { issues =>
-                                    if (0 < issues.length) complete(issues.sortBy(_.distance).head)
+                                def up(issue: DistancedIssue): Boolean = {
+                                    -45 < issue.angle && issue.angle <= 45
+                                }
+
+                                onSuccess(Database.getAround(lat, lon, radius, heading)) { issues =>
+                                    if (0 < issues.length) complete(issues.sortBy(_.distance).filter(up(_)).head)
                                     else complete("""{ "count": 0 } """)
                                 }
                             }

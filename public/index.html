@@ -37,7 +37,9 @@
     }
 
     #wrapper {
-        margin: 20px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        margin-right: 40px;
         float: right;
     }
 
@@ -236,6 +238,18 @@
                 $("#watchName").text(data.description);
                 $("#watchPosition").text(data.latitude + " | " + data.longitude);
                 var area = new nokia.maps.map.Circle( {lat: data.latitude, lng: data.longitude}, 250);
+                var heading = new nokia.maps.map.Polyline([
+                    {
+                        lat: data.latitude,
+                        lng: data.longitude
+                    },
+                    {
+                        lat: data.latitude + 250 * Math.sin(data.heading) / 100000 ,
+                        lng: data.longitude + 250 * Math.cos(data.heading) / 100000
+                    }
+                    ],
+                    { pen: pathPen }
+                );
                 var watchIcon = new nokia.maps.map.Marker(
                     new nokia.maps.geo.Coordinate(data.latitude, data.longitude),
                     {
@@ -249,6 +263,7 @@
                 showPath(data.splits);
 
                 addMapObject(area);
+                addMapObject(heading);
                 addMapObject(watchIcon);
             }).fail(function(error) { console.log("Watch failure", error); });
         }

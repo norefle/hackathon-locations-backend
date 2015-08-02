@@ -34,7 +34,16 @@ case class Issue(
     creator: String
 )
 
-case class DistancedIssue(count: Int, id: String, `type`: Long, severity: Long, latitude: Double, longitude: Double, distance: Double)
+case class DistancedIssue(
+    count: Int,
+    id: String,
+    `type`: Long,
+    severity: Long,
+    latitude: Double,
+    longitude: Double,
+    distance: Double,
+    angle: Double
+)
 
 case class TimestampedIssue(timestamp: Long, id: String, severity: Long, `type`: Long, latitude: Double, longitude: Double)
 case class IssuesSince(count: Long, issues: List[TimestampedIssue])

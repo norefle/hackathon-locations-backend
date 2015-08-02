@@ -6,12 +6,19 @@ case class Radar(orange: IssueCombinator, red: IssueCombinator)
 
 object Radar {
     def apply(issues: List[DistancedIssue]): Radar = {
-        /// @todo Calculate amount of issues by sectors.
-        val total = issues.length
-        val orangeCount = issues.count(_.severity == 1)
-        val redCount = total - orangeCount
-        val orange = IssueCombinator(orangeCount, 0, 0, 0)
-        val red = IssueCombinator(redCount, 0, 0, 0)
+        val (orangeList, redList) = issues.partition(_.severity == 1)
+        val orange = IssueCombinator(
+            orangeList.count(el => -45 < el.angle && el.angle <= 45),
+            orangeList.count(el => 45 < el.angle && el.angle <= 135),
+            orangeList.count(el => 135 <= el.angle || el.angle < -135),
+            orangeList.count(el => -135 < el.angle && el.angle <= -45)
+        )
+        val red = IssueCombinator(
+            redList.count(el => Math.abs(el.angle) <= 45),
+            redList.count(el => 45 < el.angle && el.angle <= 135),
+            redList.count(el => 135 < el.angle || el.angle < -135),
+            redList.count(el => -135 < el.angle && el.angle < -45)
+        )
         Radar(orange, red)
     }
 }

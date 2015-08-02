@@ -121,12 +121,18 @@ object Database {
         earthRadius * c * 1000
     }
 
-    private def closeEnough(radius: Double)(issue: DistancedIssue): Boolean = {
+    private def angle(center: Point, heading: Double, issue: Point): Double = {
+        val dlat = issue.latitude - center.latitude
+        val dlon = issue.longitude - center.longitude
+        (Math.toDegrees(Math.atan2(dlat, dlon)) - heading) % 360.0
+    }
+
+    private def closeEnough(latitude: Double, longitude: Double, radius: Double)(issue: DistancedIssue): Boolean = {
         println(s"Distance is ${issue.distance}m")
         issue.distance <= radius
     }
 
-    private def issueToDistanced(latitude: Double, longitude: Double)(issue: Issue): DistancedIssue =
+    private def issueToDistanced(latitude: Double, longitude: Double, heading: Double)(issue: Issue): DistancedIssue =
         DistancedIssue(
             1,
             issue.id,
@@ -134,7 +140,8 @@ object Database {
             issue.severity,
             issue.latitude,
             issue.longitude,
-            getDistance(latitude, longitude, issue.latitude, issue.longitude)
+            getDistance(latitude, longitude, issue.latitude, issue.longitude),
+            angle(Point(latitude, longitude), heading, Point(issue.latitude, issue.longitude))
         )
 
     private def issueToTimestamped(issue: Issue): TimestampedIssue = TimestampedIssue(
@@ -171,17 +178,21 @@ object Database {
     def getWatch(id: String): Future[List[WatchPosition]] =
         watches.find(BSONDocument("user" -> id)).cursor[Watch].collect[List]().map(_.map(watchToWatchPosition(_)))
 
-    def getAround(latitude: Double, longitude: Double, radius: Double): Future[List[DistancedIssue]] = {
+    def getAround(latitude: Double, longitude: Double, radius: Double, heading: Double): Future[List[DistancedIssue]] = {
         println("Get around here", latitude, longitude, radius)
         issues.find(BSONDocument("$and" ->
-            BSONArray(
-                BSONDocument("latitude" -> BSONDocument("$gt" -> (latitude - 0.01))),
-                BSONDocument("latitude" -> BSONDocument("$lt" -> (latitude + 0.01))),
-                BSONDocument("longitude" -> BSONDocument("$gt" -> (longitude - 0.01))),
-                BSONDocument("longitude" -> BSONDocument("$lt" -> (longitude + 0.01)))
+                BSONArray(
+                    BSONDocument("latitude" -> BSONDocument("$gt" -> (latitude - 0.01))),
+                    BSONDocument("latitude" -> BSONDocument("$lt" -> (latitude + 0.01))),
+                    BSONDocument("longitude" -> BSONDocument("$gt" -> (longitude - 0.01))),
+                    BSONDocument("longitude" -> BSONDocument("$lt" -> (longitude + 0.01)))
+                )
             )
         )
-        ).cursor[Issue].collect[List]().map(_.map(issueToDistanced(latitude, longitude)).filter(closeEnough(radius)))
+        .cursor[Issue]
+        .collect[List]()
+        .map(_.map(issueToDistanced(latitude, longitude, heading))
+        .filter(closeEnough(latitude, longitude, radius)))
     }
 
     def removeIssue(id: String) = issues.remove(BSONDocument("_id" -> BSONObjectID(id)))
